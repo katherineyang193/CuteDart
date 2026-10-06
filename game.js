@@ -65,3 +65,92 @@ canvas.addEventListener("pointerup",e=>{if(!state.drag||state.animating)return;s
 canvas.addEventListener("pointercancel",()=>{state.drag=false;state.aim=null;drawBoard()});
 document.querySelectorAll(".mode-card").forEach(b=>b.addEventListener("click",()=>newGame(b.dataset.mode)));
 document.getElementById("restartBtn").addEventListener("click",()=>newGame(state.mode));document.getElementById("endTurnBtn").addEventListener("click",finishTurn);document.getElementById("againBtn").addEventListener("click",()=>newGame(state.mode));document.getElementById("homeBtn").addEventListener("click",()=>{loadRecords();show("home")});document.getElementById("soundBtn").addEventListener("click",()=>{state.sound=!state.sound;document.getElementById("soundBtn").textContent=state.sound?"🔊":"🔇"});loadRecords();drawBoard();
+
+/* B1 Camera Dart mode */
+const cameraScreen=document.getElementById("cameraScreen");
+const cameraStage=document.getElementById("cameraStage");
+const cameraVideo=document.getElementById("cameraVideo");
+const arBoard=document.getElementById("arBoard");
+const cameraBoard=document.getElementById("cameraBoard");
+const cameraCtx=cameraBoard.getContext("2d");
+const cameraHint=document.getElementById("cameraHint");
+const cameraScore=document.getElementById("cameraScore");
+const cameraDarts=document.getElementById("cameraDarts");
+const cameraBadge=document.getElementById("cameraHitBadge");
+let cameraStream=null,cameraThrowing=false,cameraBoardSize=260,cameraDrag=null;
+const cameraState={score:0,darts:0,marks:[]};
+
+function drawCameraBoard(){
+ const d=devicePixelRatio||1;
+ cameraBoard.width=420*d;cameraBoard.height=420*d;
+ cameraCtx.setTransform(d,0,0,d,0,0);cameraCtx.clearRect(0,0,420,420);
+ const rings=[198,181,151,140,94,82,28,12],fills=["#57c7e8","#fff7df","#ff9b62","#fff7df","#57c7e8","#ff9b62","#ffd84d"];
+ cameraCtx.beginPath();cameraCtx.arc(C,C,198,0,Math.PI*2);cameraCtx.fillStyle="#fff";cameraCtx.fill();
+ for(let i=0;i<6;i++){cameraCtx.beginPath();cameraCtx.arc(C,C,rings[i],0,Math.PI*2);cameraCtx.fillStyle=fills[i];cameraCtx.fill()}
+ for(let i=0;i<20;i++){const a=-Math.PI/2+i*Math.PI*2/20,a2=a+Math.PI*2/20;cameraCtx.beginPath();cameraCtx.moveTo(C,C);cameraCtx.arc(C,C,198,a,a2);cameraCtx.closePath();cameraCtx.fillStyle=i%2?"#fff7df":"#2f6f9f";cameraCtx.globalAlpha=.13;cameraCtx.fill();cameraCtx.globalAlpha=1;cameraCtx.strokeStyle="rgba(41,51,74,.35)";cameraCtx.stroke()}
+ rings.forEach(r=>{cameraCtx.beginPath();cameraCtx.arc(C,C,r,0,Math.PI*2);cameraCtx.strokeStyle="#315a91";cameraCtx.lineWidth=2;cameraCtx.stroke()});
+ cameraCtx.beginPath();cameraCtx.arc(C,C,200,0,Math.PI*2);cameraCtx.strokeStyle="#24364b";cameraCtx.lineWidth=5;cameraCtx.stroke();
+ cameraCtx.fillStyle="#24364b";cameraCtx.font="900 17px Trebuchet MS";cameraCtx.textAlign="center";cameraCtx.textBaseline="middle";
+ for(let i=0;i<20;i++){const a=-Math.PI/2+(i+.5)*Math.PI*2/20;cameraCtx.fillText(sectors[i],C+166*Math.cos(a),C+166*Math.sin(a))}
+ cameraCtx.beginPath();cameraCtx.arc(C,C,12,0,Math.PI*2);cameraCtx.fillStyle="#ffd84d";cameraCtx.fill();cameraCtx.strokeStyle="#24364b";cameraCtx.stroke();
+ cameraState.marks.forEach(m=>drawCameraDart(m.x,m.y,m.label));
+}
+function drawCameraDart(x,y,label){
+ cameraCtx.save();cameraCtx.translate(x,y);cameraCtx.rotate(-.35);cameraCtx.shadowColor="rgba(0,0,0,.35)";cameraCtx.shadowBlur=5;
+ cameraCtx.strokeStyle="#17283b";cameraCtx.lineWidth=3;cameraCtx.beginPath();cameraCtx.moveTo(-27,0);cameraCtx.lineTo(12,0);cameraCtx.stroke();
+ cameraCtx.fillStyle="#aeb8c1";cameraCtx.fillRect(-4,-3,18,6);
+ cameraCtx.fillStyle="#26384a";cameraCtx.beginPath();cameraCtx.moveTo(12,-3);cameraCtx.lineTo(26,0);cameraCtx.lineTo(12,3);cameraCtx.closePath();cameraCtx.fill();
+ cameraCtx.fillStyle="#ff8068";cameraCtx.beginPath();cameraCtx.moveTo(-17,-5);cameraCtx.lineTo(-29,-9);cameraCtx.lineTo(-23,0);cameraCtx.lineTo(-29,9);cameraCtx.lineTo(-17,5);cameraCtx.closePath();cameraCtx.fill();cameraCtx.restore();
+ if(label){cameraCtx.fillStyle="#29334a";cameraCtx.font="900 13px Trebuchet MS";cameraCtx.textAlign="center";cameraCtx.fillText(label,x,y-16)}
+}
+function updateCameraHud(){cameraScore.textContent="練習 "+cameraState.score+" 分";cameraDarts.textContent=cameraState.darts+" / 3 鏢"}
+async function startCameraMode(){
+ show("camera");cameraState.score=0;cameraState.darts=0;cameraState.marks=[];cameraThrowing=false;updateCameraHud();drawCameraBoard();resetCameraBoard();
+ cameraScreen.classList.remove("throwing");document.getElementById("cameraThrowMode").textContent="開始投鏢 🎯";
+ cameraHint.textContent="先拖曳飛鏢靶到想放的位置，再按「開始投鏢」";
+ try{
+  if(!navigator.mediaDevices?.getUserMedia)throw new Error("unsupported");
+  cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});
+  cameraVideo.srcObject=cameraStream;await cameraVideo.play();cameraStage.classList.add("ready");
+ }catch(err){
+  cameraStage.classList.remove("ready");
+  cameraHint.textContent=location.protocol==="https:"?"📷 無法開啟相機，請確認瀏覽器相機權限。":"📷 相機模式需要 HTTPS 或 localhost 才能使用。";
+ }
+}
+function stopCamera(){if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null}cameraVideo.srcObject=null;cameraStage.classList.remove("ready")}
+function resetCameraBoard(){cameraBoardSize=Math.min(280,Math.max(210,cameraStage.clientWidth*.58));arBoard.style.width=cameraBoardSize+"px";arBoard.style.height=cameraBoardSize+"px";arBoard.style.left="50%";arBoard.style.top="50%";arBoard.style.transform="translate(-50%,-50%)"}
+function resizeCameraBoard(delta){cameraBoardSize=Math.max(170,Math.min(Math.min(360,cameraStage.clientWidth*.82),cameraBoardSize+delta));arBoard.style.width=cameraBoardSize+"px";arBoard.style.height=cameraBoardSize+"px"}
+function cameraPoint(e){const r=cameraBoard.getBoundingClientRect();return{x:(e.clientX-r.left)*420/r.width,y:(e.clientY-r.top)*420/r.height}}
+function cameraThrow(p){
+ const h=hitScore(p.x,p.y);cameraState.score+=h.score;cameraState.darts++;cameraState.marks.push({x:p.x,y:p.y,label:h.label});drawCameraBoard();updateCameraHud();
+ cameraBadge.textContent=h.score?h.label+"!":"MISS";cameraBadge.classList.remove("show");void cameraBadge.offsetWidth;cameraBadge.classList.add("show");
+ cameraHint.textContent=h.score?"🎯 "+h.label+" +"+h.score:"💨 MISS！";
+ if(h.kind==="bull")beep(920,.11);else if(h.kind==="triple"||h.kind==="double")beep(760,.09);else if(h.kind==="miss")beep(180,.12);else beep(620,.07);
+ if(cameraState.darts>=3)setTimeout(()=>{cameraState.darts=0;cameraState.marks=[];drawCameraBoard();updateCameraHud();cameraHint.textContent="✨ 新回合！繼續投鏢吧！"},900);
+}
+document.getElementById("classicEntry").addEventListener("click",()=>document.getElementById("classicModes").classList.toggle("open"));
+document.getElementById("cameraEntry").addEventListener("click",startCameraMode);
+document.getElementById("cameraHomeBtn").addEventListener("click",()=>{stopCamera();loadRecords();show("home")});
+document.getElementById("smallerBoard").addEventListener("click",()=>resizeCameraBoard(-25));
+document.getElementById("biggerBoard").addEventListener("click",()=>resizeCameraBoard(25));
+document.getElementById("resetBoard").addEventListener("click",resetCameraBoard);
+document.getElementById("cameraThrowMode").addEventListener("click",()=>{
+ cameraThrowing=!cameraThrowing;cameraScreen.classList.toggle("throwing",cameraThrowing);
+ document.getElementById("cameraThrowMode").textContent=cameraThrowing?"調整飛鏢靶 📍":"開始投鏢 🎯";
+ cameraHint.textContent=cameraThrowing?"🎯 點擊靶面投擲。命中位置就是實際計分位置。":"拖曳飛鏢靶到想放的位置。";
+});
+arBoard.addEventListener("pointerdown",e=>{
+ e.preventDefault();
+ if(cameraThrowing){cameraThrow(cameraPoint(e));return}
+ const r=arBoard.getBoundingClientRect(),s=cameraStage.getBoundingClientRect();
+ cameraDrag={dx:e.clientX-(r.left+r.width/2),dy:e.clientY-(r.top+r.height/2),stage:s};arBoard.setPointerCapture(e.pointerId)
+});
+arBoard.addEventListener("pointermove",e=>{
+ if(!cameraDrag||cameraThrowing)return;
+ const s=cameraDrag.stage,half=cameraBoardSize/2;
+ const x=Math.max(half,Math.min(s.width-half,e.clientX-s.left-cameraDrag.dx));
+ const y=Math.max(half,Math.min(s.height-half,e.clientY-s.top-cameraDrag.dy));
+ arBoard.style.left=x+"px";arBoard.style.top=y+"px";arBoard.style.transform="translate(-50%,-50%)";
+});
+arBoard.addEventListener("pointerup",()=>cameraDrag=null);
+arBoard.addEventListener("pointercancel",()=>cameraDrag=null);
