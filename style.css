@@ -12,3 +12,7 @@ body:has(.camera-screen.throwing){overflow:hidden}
 .camera-tools{grid-template-columns:repeat(4,1fr)}
 .camera-stage.selfie video{transform:scaleX(-1)}
 @media(max-width:420px){.camera-tools{grid-template-columns:1fr 1fr}.camera-screen.throwing #cameraThrowMode{font-size:16px;min-height:44px}}
+
+.camera-screen.throwing #cameraHitBadge{z-index:15;font-size:clamp(48px,15vw,86px);padding:18px 30px;border-width:5px;border-radius:28px;white-space:nowrap}
+.camera-screen.throwing #cameraHitBadge.show{animation:cameraScorePop 1.8s ease forwards}
+@keyframes cameraScorePop{0%{opacity:0;transform:translate(-50%,-50%) scale(.45)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}75%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(.94)}}
