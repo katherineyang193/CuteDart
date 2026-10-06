@@ -1,5 +1,5 @@
 const canvas=document.getElementById("board"),ctx=canvas.getContext("2d");
-const screens={home:document.getElementById("homeScreen"),game:document.getElementById("gameScreen"),result:document.getElementById("resultScreen")};
+const screens={home:document.getElementById("homeScreen"),game:document.getElementById("gameScreen"),camera:document.getElementById("cameraScreen"),result:document.getElementById("resultScreen")};
 const scoreEl=document.getElementById("score"),turnEl=document.getElementById("turnScore"),dartEl=document.getElementById("dartCount"),modeEl=document.getElementById("modeLabel"),lastEl=document.getElementById("lastThrow"),hintEl=document.getElementById("hint"),badge=document.getElementById("hitBadge");
 const state={mode:"501",score:501,turn:0,darts:[],marks:[],totalDarts:0,bestRound:0,oneEighty:0,drag:false,start:null,aim:null,animating:false,sound:true};
 let impact=null;
