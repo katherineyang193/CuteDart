@@ -140,9 +140,9 @@ function cameraThrow(p){
  const h=hitScore(p.x,p.y);cameraState.score+=h.score;cameraState.darts++;cameraState.marks.push({x:p.x,y:p.y,label:h.label});cameraScreen.classList.add("hit-reveal");drawCameraBoard(false);updateCameraHud();
  cameraBadge.textContent=h.score?h.label+"!":"MISS";cameraBadge.classList.remove("show");void cameraBadge.offsetWidth;cameraBadge.classList.add("show");
  cameraHint.textContent=h.score?"🎯 "+h.label+" +"+h.score:"💨 MISS！";
- setTimeout(()=>{cameraScreen.classList.remove("hit-reveal");if(cameraThrowing)drawCameraBoard(true)},1050);
+ setTimeout(()=>{cameraScreen.classList.remove("hit-reveal");if(cameraThrowing)drawCameraBoard(true)},2050);
  if(h.kind==="bull")beep(920,.11);else if(h.kind==="triple"||h.kind==="double")beep(760,.09);else if(h.kind==="miss")beep(180,.12);else beep(620,.07);
- if(cameraState.darts>=3)setTimeout(()=>{cameraState.darts=0;cameraState.marks=[];drawCameraBoard();updateCameraHud();cameraHint.textContent="✨ 新回合！繼續投鏢吧！"},900);
+ if(cameraState.darts>=3)setTimeout(()=>{cameraState.darts=0;cameraState.marks=[];drawCameraBoard();updateCameraHud();cameraHint.textContent="✨ 新回合！繼續投鏢吧！"},2100);
 }
 document.getElementById("classicEntry").addEventListener("click",()=>document.getElementById("classicModes").classList.toggle("open"));
 document.getElementById("cameraEntry").addEventListener("click",startCameraMode);
