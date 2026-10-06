@@ -6,6 +6,8 @@ const board=document.getElementById("arBoard");
 const stateEl=document.getElementById("gestureState");
 const detailEl=document.getElementById("gestureDetail");
 const throwBtn=document.getElementById("cameraThrowMode");
+const overlay=document.getElementById("handOverlay"),octx=overlay.getContext("2d"),big=document.getElementById("gestureBig");
+const links=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
 let landmarker=null,running=false,lastVideoTime=-1,lastSample=null,armed=false,armedAt=0,cooldownUntil=0;
 const history=[];
 
@@ -14,6 +16,7 @@ function status(main,detail,cls=""){
  stateEl.textContent=main;detailEl.textContent=detail;
  stage.classList.toggle("hand-ready",cls==="ready"||cls==="armed");
  stage.classList.toggle("gesture-armed",cls==="armed");
+ big.textContent=main;
 }
 async function initHands(){
  if(landmarker)return true;
@@ -42,7 +45,16 @@ function virtualThrow(tip,velocity){
  const x=Math.max(2,Math.min(418,p.x)),y=Math.max(2,Math.min(418,p.y));
  if(typeof window.cuteDartGestureThrow==="function")window.cuteDartGestureThrow({x,y});
 }
+function drawHand(lm){
+ const r=stage.getBoundingClientRect(),d=devicePixelRatio||1;overlay.width=r.width*d;overlay.height=r.height*d;octx.setTransform(d,0,0,d,0,0);octx.clearRect(0,0,r.width,r.height);
+ const pt=i=>({x:(1-lm[i].x)*r.width,y:lm[i].y*r.height});
+ octx.lineWidth=5;octx.lineCap="round";octx.strokeStyle="rgba(255,216,77,.95)";links.forEach(([a,b])=>{const p=pt(a),q=pt(b);octx.beginPath();octx.moveTo(p.x,p.y);octx.lineTo(q.x,q.y);octx.stroke()});
+ lm.forEach((_,i)=>{const p=pt(i);octx.beginPath();octx.arc(p.x,p.y,i===4||i===8?9:6,0,Math.PI*2);octx.fillStyle=i===4||i===8?"#fff":"#58c7ef";octx.fill();octx.strokeStyle="#29334a";octx.lineWidth=2;octx.stroke()});
+ const a=pt(4),b=pt(8);octx.beginPath();octx.arc((a.x+b.x)/2,(a.y+b.y)/2,16,0,Math.PI*2);octx.strokeStyle=armed?"#ffd84d":"rgba(255,255,255,.8)";octx.lineWidth=4;octx.stroke();
+}
+function clearHand(){octx.clearRect(0,0,overlay.width,overlay.height)}
 function processHand(lm,now){
+ drawHand(lm);
  const thumb=lm[4],index=lm[8],wrist=lm[0],middleMcp=lm[9];
  const palm=Math.max(.035,dist(wrist,middleMcp));
  const pinch=dist(thumb,index)/palm;
@@ -69,7 +81,7 @@ function loop(){
   try{
    const result=landmarker.detectForVideo(video,performance.now());
    if(result.landmarks?.length)processHand(result.landmarks[0],performance.now());
-   else{armed=false;history.length=0;status("🖐️ 尋找投鏢手","把手放在鏡頭前，手腕與手指盡量完整入鏡。")}
+   else{armed=false;history.length=0;clearHand();status("🖐️ 找手中","把手放在鏡頭前，手腕與手指盡量完整入鏡。")}
   }catch{}
  }
  requestAnimationFrame(loop);
@@ -79,6 +91,6 @@ async function startTracking(){
  const ok=await initHands();if(!ok)return;
  running=true;armed=false;history.length=0;status("🖐️ 尋找投鏢手","把手放進鏡頭，拇指與食指捏合準備。");requestAnimationFrame(loop);
 }
-function stopTracking(){running=false;armed=false;history.length=0;stage.classList.remove("hand-ready","gesture-armed")}
+function stopTracking(){running=false;armed=false;history.length=0;clearHand();big.textContent="🖐️ 準備";stage.classList.remove("hand-ready","gesture-armed")}
 throwBtn.addEventListener("click",()=>{setTimeout(()=>{if(document.getElementById("cameraScreen").classList.contains("throwing"))startTracking();else stopTracking()},0)});
 document.getElementById("cameraHomeBtn").addEventListener("click",stopTracking);
