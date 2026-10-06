@@ -106,7 +106,7 @@ function drawCameraDart(x,y,label){
 function updateCameraHud(){cameraScore.textContent="練習 "+cameraState.score+" 分";cameraDarts.textContent=cameraState.darts+" / 3 鏢"}
 function startCameraMode(){
  show("camera");cameraState.score=0;cameraState.darts=0;cameraState.marks=[];cameraThrowing=false;updateCameraHud();drawCameraBoard();resetCameraBoard();
- cameraScreen.classList.remove("throwing");document.getElementById("cameraThrowMode").textContent="開始投鏢 🎯";
+ cameraScreen.classList.remove("throwing");document.getElementById("cameraThrowMode").textContent="開始體感投鏢 🎯";
  cameraHint.textContent="📷 請按「開啟相機」，瀏覽器會詢問相機權限。";
  document.getElementById("openCameraBtn").style.display="block";
 }
@@ -153,12 +153,12 @@ document.getElementById("biggerBoard").addEventListener("click",()=>resizeCamera
 document.getElementById("resetBoard").addEventListener("click",resetCameraBoard);
 document.getElementById("cameraThrowMode").addEventListener("click",()=>{
  cameraThrowing=!cameraThrowing;cameraScreen.classList.toggle("throwing",cameraThrowing);
- document.getElementById("cameraThrowMode").textContent=cameraThrowing?"調整飛鏢靶 📍":"開始投鏢 🎯";
- cameraHint.textContent=cameraThrowing?"🎯 點擊靶面投擲。命中位置就是實際計分位置。":"拖曳飛鏢靶到想放的位置。";
+ document.getElementById("cameraThrowMode").textContent=cameraThrowing?"結束體感投鏢 ✋":"開始體感投鏢 🎯";
+ cameraHint.textContent=cameraThrowing?"🖐️ 不用碰螢幕：捏住準備、向前投擲並鬆開。":"拖曳飛鏢靶到想放的位置。";
 });
 arBoard.addEventListener("pointerdown",e=>{
  e.preventDefault();
- if(cameraThrowing){cameraThrow(cameraPoint(e));return}
+ if(cameraThrowing)return
  const r=arBoard.getBoundingClientRect(),s=cameraStage.getBoundingClientRect();
  cameraDrag={dx:e.clientX-(r.left+r.width/2),dy:e.clientY-(r.top+r.height/2),stage:s};arBoard.setPointerCapture(e.pointerId)
 });
@@ -171,3 +171,5 @@ arBoard.addEventListener("pointermove",e=>{
 });
 arBoard.addEventListener("pointerup",()=>cameraDrag=null);
 arBoard.addEventListener("pointercancel",()=>cameraDrag=null);
+
+window.cuteDartGestureThrow=p=>{if(cameraThrowing)cameraThrow(p)};
