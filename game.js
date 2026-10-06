@@ -80,19 +80,18 @@ const cameraBadge=document.getElementById("cameraHitBadge");
 let cameraStream=null,cameraThrowing=false,cameraBoardSize=260,cameraDrag=null;
 const cameraState={score:0,darts:0,marks:[]};
 
-function drawCameraBoard(){
+function drawCameraBoard(minimal=cameraThrowing&&!cameraScreen.classList.contains("hit-reveal")){
  const d=devicePixelRatio||1;
  cameraBoard.width=420*d;cameraBoard.height=420*d;
  cameraCtx.setTransform(d,0,0,d,0,0);cameraCtx.clearRect(0,0,420,420);
  const rings=[198,181,151,140,94,82,28,12],fills=["#57c7e8","#fff7df","#ff9b62","#fff7df","#57c7e8","#ff9b62","#ffd84d"];
- cameraCtx.beginPath();cameraCtx.arc(C,C,198,0,Math.PI*2);cameraCtx.fillStyle="#fff";cameraCtx.fill();
- for(let i=0;i<6;i++){cameraCtx.beginPath();cameraCtx.arc(C,C,rings[i],0,Math.PI*2);cameraCtx.fillStyle=fills[i];cameraCtx.fill()}
- for(let i=0;i<20;i++){const a=-Math.PI/2+i*Math.PI*2/20,a2=a+Math.PI*2/20;cameraCtx.beginPath();cameraCtx.moveTo(C,C);cameraCtx.arc(C,C,198,a,a2);cameraCtx.closePath();cameraCtx.fillStyle=i%2?"#fff7df":"#2f6f9f";cameraCtx.globalAlpha=.13;cameraCtx.fill();cameraCtx.globalAlpha=1;cameraCtx.strokeStyle="rgba(41,51,74,.35)";cameraCtx.stroke()}
- rings.forEach(r=>{cameraCtx.beginPath();cameraCtx.arc(C,C,r,0,Math.PI*2);cameraCtx.strokeStyle="#315a91";cameraCtx.lineWidth=2;cameraCtx.stroke()});
+ if(!minimal){cameraCtx.beginPath();cameraCtx.arc(C,C,198,0,Math.PI*2);cameraCtx.fillStyle="#fff";cameraCtx.fill();for(let i=0;i<6;i++){cameraCtx.beginPath();cameraCtx.arc(C,C,rings[i],0,Math.PI*2);cameraCtx.fillStyle=fills[i];cameraCtx.fill()}}
+ for(let i=0;i<20;i++){const a=-Math.PI/2+i*Math.PI*2/20,a2=a+Math.PI*2/20;cameraCtx.beginPath();cameraCtx.moveTo(C,C);cameraCtx.arc(C,C,198,a,a2);cameraCtx.closePath();if(!minimal){cameraCtx.fillStyle=i%2?"#fff7df":"#2f6f9f";cameraCtx.globalAlpha=.13;cameraCtx.fill();cameraCtx.globalAlpha=1}cameraCtx.strokeStyle=minimal?"rgba(255,255,255,.72)":"rgba(41,51,74,.35)";cameraCtx.lineWidth=minimal?2.5:1;cameraCtx.stroke()}
+ rings.forEach(r=>{cameraCtx.beginPath();cameraCtx.arc(C,C,r,0,Math.PI*2);cameraCtx.strokeStyle=minimal?"rgba(255,255,255,.82)":"#315a91";cameraCtx.lineWidth=minimal?3:2;cameraCtx.stroke()});
  cameraCtx.beginPath();cameraCtx.arc(C,C,200,0,Math.PI*2);cameraCtx.strokeStyle="#24364b";cameraCtx.lineWidth=5;cameraCtx.stroke();
- cameraCtx.fillStyle="#24364b";cameraCtx.font="900 17px Trebuchet MS";cameraCtx.textAlign="center";cameraCtx.textBaseline="middle";
+ cameraCtx.fillStyle=minimal?"rgba(255,255,255,.95)":"#24364b";cameraCtx.font="900 17px Trebuchet MS";cameraCtx.textAlign="center";cameraCtx.textBaseline="middle";
  for(let i=0;i<20;i++){const a=-Math.PI/2+(i+.5)*Math.PI*2/20;cameraCtx.fillText(sectors[i],C+166*Math.cos(a),C+166*Math.sin(a))}
- cameraCtx.beginPath();cameraCtx.arc(C,C,12,0,Math.PI*2);cameraCtx.fillStyle="#ffd84d";cameraCtx.fill();cameraCtx.strokeStyle="#24364b";cameraCtx.stroke();
+ if(!minimal){cameraCtx.beginPath();cameraCtx.arc(C,C,12,0,Math.PI*2);cameraCtx.fillStyle="#ffd84d";cameraCtx.fill();cameraCtx.strokeStyle="#24364b";cameraCtx.stroke()}
  cameraState.marks.forEach(m=>drawCameraDart(m.x,m.y,m.label));
 }
 function drawCameraDart(x,y,label){
@@ -138,9 +137,10 @@ function resetCameraBoard(){cameraBoardSize=Math.min(280,Math.max(210,cameraStag
 function resizeCameraBoard(delta){cameraBoardSize=Math.max(170,Math.min(Math.min(360,cameraStage.clientWidth*.82),cameraBoardSize+delta));arBoard.style.width=cameraBoardSize+"px";arBoard.style.height=cameraBoardSize+"px"}
 function cameraPoint(e){const r=cameraBoard.getBoundingClientRect();return{x:(e.clientX-r.left)*420/r.width,y:(e.clientY-r.top)*420/r.height}}
 function cameraThrow(p){
- const h=hitScore(p.x,p.y);cameraState.score+=h.score;cameraState.darts++;cameraState.marks.push({x:p.x,y:p.y,label:h.label});drawCameraBoard();updateCameraHud();
+ const h=hitScore(p.x,p.y);cameraState.score+=h.score;cameraState.darts++;cameraState.marks.push({x:p.x,y:p.y,label:h.label});cameraScreen.classList.add("hit-reveal");drawCameraBoard(false);updateCameraHud();
  cameraBadge.textContent=h.score?h.label+"!":"MISS";cameraBadge.classList.remove("show");void cameraBadge.offsetWidth;cameraBadge.classList.add("show");
  cameraHint.textContent=h.score?"🎯 "+h.label+" +"+h.score:"💨 MISS！";
+ setTimeout(()=>{cameraScreen.classList.remove("hit-reveal");if(cameraThrowing)drawCameraBoard(true)},1050);
  if(h.kind==="bull")beep(920,.11);else if(h.kind==="triple"||h.kind==="double")beep(760,.09);else if(h.kind==="miss")beep(180,.12);else beep(620,.07);
  if(cameraState.darts>=3)setTimeout(()=>{cameraState.darts=0;cameraState.marks=[];drawCameraBoard();updateCameraHud();cameraHint.textContent="✨ 新回合！繼續投鏢吧！"},900);
 }
@@ -152,7 +152,7 @@ document.getElementById("smallerBoard").addEventListener("click",()=>resizeCamer
 document.getElementById("biggerBoard").addEventListener("click",()=>resizeCameraBoard(25));
 document.getElementById("resetBoard").addEventListener("click",resetCameraBoard);
 document.getElementById("cameraThrowMode").addEventListener("click",()=>{
- cameraThrowing=!cameraThrowing;cameraScreen.classList.toggle("throwing",cameraThrowing);
+ cameraThrowing=!cameraThrowing;cameraScreen.classList.toggle("throwing",cameraThrowing);cameraScreen.classList.remove("hit-reveal");drawCameraBoard();
  document.getElementById("cameraThrowMode").textContent=cameraThrowing?"結束體感投鏢 ✋":"開始體感投鏢 🎯";
  cameraHint.textContent=cameraThrowing?"🖐️ 不用碰螢幕：捏住準備、向前投擲並鬆開。":"拖曳飛鏢靶到想放的位置。";
 });
