@@ -8,7 +8,7 @@ const detailEl=document.getElementById("gestureDetail");
 const throwBtn=document.getElementById("cameraThrowMode");
 const overlay=document.getElementById("handOverlay"),octx=overlay.getContext("2d"),big=document.getElementById("gestureBig");
 const links=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
-let landmarker=null,running=false,lastVideoTime=-1,lastSample=null,armed=false,armedAt=0,cooldownUntil=0;
+let landmarker=null,running=false,lastVideoTime=-1,lastSample=null,armed=false,armedAt=0,cooldownUntil=0,pinchSince=0,throwStarted=false,maxThrowSpeed=0;
 const history=[];
 
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
@@ -63,16 +63,26 @@ function processHand(lm,now){
  const old=history[0]||sample,dt=Math.max(16,now-old.t);
  const vx=(sample.x-old.x)/(dt/1000),vy=(sample.y-old.y)/(dt/1000),vz=(sample.z-old.z)/(dt/1000);
  const speed=Math.hypot(vx,vy,vz*.65);
- if(!armed&&pinch<.72&&now>cooldownUntil){armed=true;armedAt=now;status("🤏 READY","已偵測持鏢姿勢，做出自然投擲並鬆開手指。","armed");return}
+ if(!armed){
+  if(pinch<.72){
+   if(!pinchSince)pinchSince=now;
+   if(now-pinchSince>=220&&now>cooldownUntil){armed=true;armedAt=now;throwStarted=false;maxThrowSpeed=0;status("🤏 READY","持鏢已鎖定，保持捏合後做出投擲動作。","armed")}
+   else status("🤏 握住","再保持一下，確認這不是手掌張開造成的誤判。","ready");
+  }else{pinchSince=0;status("✋ 已偵測到手","先用拇指＋食指捏住，系統才會進入投擲狀態。","ready")}
+  return;
+ }
  if(armed){
-  if(pinch<.95){status("🎯 AIM","保持捏合，向前做投鏢動作。","armed");return}
-  if(now-armedAt>120&&speed>.32){
-   armed=false;cooldownUntil=now+900;status("💨 THROW！","已偵測 Release，虛擬飛鏢出手！","ready");
+  maxThrowSpeed=Math.max(maxThrowSpeed,speed);
+  if(pinch<.95){
+   if(speed>.38&&now-armedAt>180)throwStarted=true;
+   status(throwStarted?"💨 投擲中":"🎯 AIM",throwStarted?"保持動作，鬆開手指才會 Release。":"先做出明確前送動作，再鬆開手指。","armed");return
+  }
+  if(throwStarted&&maxThrowSpeed>.38&&now-armedAt>220){
+   armed=false;pinchSince=0;throwStarted=false;cooldownUntil=now+1200;status("💨 THROW！","已確認持鏢 → 投擲 → Release。","ready");
    virtualThrow(index,{x:vx,y:vy});if(navigator.vibrate)navigator.vibrate(45);return
   }
-  if(now-armedAt>2500){armed=false;status("🖐️ 重新準備","剛才沒有偵測到明確投擲，重新捏住即可。","ready")}
+  armed=false;pinchSince=0;throwStarted=false;status("↩️ 沒有投出","只有張開手不算投擲，重新捏住再來。","ready");
  }
- else status("✋ 已偵測到手","拇指與食指捏合，模擬握住飛鏢。","ready");
 }
 function loop(){
  if(!running)return;
@@ -81,7 +91,7 @@ function loop(){
   try{
    const result=landmarker.detectForVideo(video,performance.now());
    if(result.landmarks?.length)processHand(result.landmarks[0],performance.now());
-   else{armed=false;history.length=0;clearHand();status("🖐️ 找手中","把手放在鏡頭前，手腕與手指盡量完整入鏡。")}
+   else{armed=false;pinchSince=0;throwStarted=false;history.length=0;clearHand();status("🖐️ 找手中","把手放在鏡頭前，手腕與手指盡量完整入鏡。")}
   }catch{}
  }
  requestAnimationFrame(loop);
@@ -91,6 +101,6 @@ async function startTracking(){
  const ok=await initHands();if(!ok)return;
  running=true;armed=false;history.length=0;status("🖐️ 尋找投鏢手","把手放進鏡頭，拇指與食指捏合準備。");requestAnimationFrame(loop);
 }
-function stopTracking(){running=false;armed=false;history.length=0;clearHand();big.textContent="🖐️ 準備";stage.classList.remove("hand-ready","gesture-armed")}
+function stopTracking(){running=false;armed=false;pinchSince=0;throwStarted=false;history.length=0;clearHand();big.textContent="🖐️ 準備";stage.classList.remove("hand-ready","gesture-armed")}
 throwBtn.addEventListener("click",()=>{setTimeout(()=>{if(document.getElementById("cameraScreen").classList.contains("throwing"))startTracking();else stopTracking()},0)});
 document.getElementById("cameraHomeBtn").addEventListener("click",stopTracking);
