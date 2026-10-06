@@ -104,17 +104,33 @@ function drawCameraDart(x,y,label){
  if(label){cameraCtx.fillStyle="#29334a";cameraCtx.font="900 13px Trebuchet MS";cameraCtx.textAlign="center";cameraCtx.fillText(label,x,y-16)}
 }
 function updateCameraHud(){cameraScore.textContent="練習 "+cameraState.score+" 分";cameraDarts.textContent=cameraState.darts+" / 3 鏢"}
-async function startCameraMode(){
+function startCameraMode(){
  show("camera");cameraState.score=0;cameraState.darts=0;cameraState.marks=[];cameraThrowing=false;updateCameraHud();drawCameraBoard();resetCameraBoard();
  cameraScreen.classList.remove("throwing");document.getElementById("cameraThrowMode").textContent="開始投鏢 🎯";
- cameraHint.textContent="先拖曳飛鏢靶到想放的位置，再按「開始投鏢」";
+ cameraHint.textContent="📷 請按「開啟相機」，瀏覽器會詢問相機權限。";
+ document.getElementById("openCameraBtn").style.display="block";
+}
+async function requestCamera(){
+ const btn=document.getElementById("openCameraBtn");
+ btn.disabled=true;btn.textContent="📷 正在開啟相機…";
+ cameraHint.textContent="正在向瀏覽器要求相機權限…";
  try{
-  if(!navigator.mediaDevices?.getUserMedia)throw new Error("unsupported");
+  if(!window.isSecureContext)throw Object.assign(new Error("insecure"),{name:"SecurityError"});
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw Object.assign(new Error("unsupported"),{name:"NotSupportedError"});
+  stopCamera();
   cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});
   cameraVideo.srcObject=cameraStream;await cameraVideo.play();cameraStage.classList.add("ready");
+  cameraHint.textContent="✅ 相機已開啟！拖曳飛鏢靶調整位置，再開始投鏢。";
+  btn.style.display="none";
  }catch(err){
-  cameraStage.classList.remove("ready");
-  cameraHint.textContent=location.protocol==="https:"?"📷 無法開啟相機，請確認瀏覽器相機權限。":"📷 相機模式需要 HTTPS 或 localhost 才能使用。";
+  cameraStage.classList.remove("ready");btn.disabled=false;btn.textContent="📷 再試一次開啟相機";
+  const n=err&&err.name?err.name:"UnknownError";
+  if(n==="NotAllowedError")cameraHint.textContent="🚫 相機權限被拒絕。請到瀏覽器網址列的網站權限，把「相機」改成允許後再試。";
+  else if(n==="NotFoundError")cameraHint.textContent="📷 找不到可用相機。電腦若沒有鏡頭會出現這個狀況。";
+  else if(n==="NotReadableError")cameraHint.textContent="📷 相機目前被其他程式占用，請關閉其他使用鏡頭的程式後再試。";
+  else if(n==="SecurityError")cameraHint.textContent="🔒 目前不是安全連線。Camera 模式必須使用 HTTPS 的 GitHub Pages 網址。";
+  else if(n==="NotSupportedError")cameraHint.textContent="📷 這個瀏覽器不支援網頁相機功能，請改用最新版 Chrome / Safari / Edge。";
+  else cameraHint.textContent="📷 相機啟動失敗（"+n+"）。請檢查網站相機權限後再試。";
  }
 }
 function stopCamera(){if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null}cameraVideo.srcObject=null;cameraStage.classList.remove("ready")}
@@ -130,6 +146,7 @@ function cameraThrow(p){
 }
 document.getElementById("classicEntry").addEventListener("click",()=>document.getElementById("classicModes").classList.toggle("open"));
 document.getElementById("cameraEntry").addEventListener("click",startCameraMode);
+document.getElementById("openCameraBtn").addEventListener("click",requestCamera);
 document.getElementById("cameraHomeBtn").addEventListener("click",()=>{stopCamera();loadRecords();show("home")});
 document.getElementById("smallerBoard").addEventListener("click",()=>resizeCameraBoard(-25));
 document.getElementById("biggerBoard").addEventListener("click",()=>resizeCameraBoard(25));
