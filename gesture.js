@@ -8,7 +8,7 @@ const detailEl=document.getElementById("gestureDetail");
 const throwBtn=document.getElementById("cameraThrowMode");
 const overlay=document.getElementById("handOverlay"),octx=overlay.getContext("2d"),big=document.getElementById("gestureBig");
 const links=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
-let landmarker=null,running=false,lastVideoTime=-1,lastSample=null,armed=false,armedAt=0,cooldownUntil=0,pinchSince=0,throwStarted=false,maxThrowSpeed=0;
+let landmarker=null,running=false,lastVideoTime=-1,lastSample=null,armed=false,armedAt=0,cooldownUntil=0,pinchSince=0,throwStarted=false,maxThrowSpeed=0,lastSeenAt=0,lastTip=null;
 const history=[];
 
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
@@ -23,7 +23,7 @@ async function initHands(){
  status("⏳ 載入手勢辨識中…","第一次需要下載手部辨識模型。");
  try{
   const vision=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/wasm");
-  landmarker=await HandLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",delegate:"GPU"},runningMode:"VIDEO",numHands:1,minHandDetectionConfidence:.55,minHandPresenceConfidence:.55,minTrackingConfidence:.5});
+  landmarker=await HandLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",delegate:"GPU"},runningMode:"VIDEO",numHands:1,minHandDetectionConfidence:.35,minHandPresenceConfidence:.35,minTrackingConfidence:.35});
   status("🖐️ 手勢辨識已就緒","把投鏢手放進鏡頭。");return true;
  }catch(e){
   try{
@@ -59,26 +59,25 @@ function processHand(lm,now){
  const palm=Math.max(.035,dist(wrist,middleMcp));
  const pinch=dist(thumb,index)/palm;
  const sample={t:now,x:index.x,y:index.y,z:index.z||0};
- history.push(sample);while(history.length&&now-history[0].t>220)history.shift();
+ lastSeenAt=now;lastTip=index;
+ history.push(sample);while(history.length&&now-history[0].t>360)history.shift();
  const old=history[0]||sample,dt=Math.max(16,now-old.t);
  const vx=(sample.x-old.x)/(dt/1000),vy=(sample.y-old.y)/(dt/1000),vz=(sample.z-old.z)/(dt/1000);
  const speed=Math.hypot(vx,vy,vz*.65);
  if(!armed){
-  if(pinch<.72){
-   if(!pinchSince)pinchSince=now;
-   if(now-pinchSince>=220&&now>cooldownUntil){armed=true;armedAt=now;throwStarted=false;maxThrowSpeed=0;status("🤏 READY","持鏢已鎖定，保持捏合後做出投擲動作。","armed")}
-   else status("🤏 握住","再保持一下，確認這不是手掌張開造成的誤判。","ready");
-  }else{pinchSince=0;status("✋ 已偵測到手","先用拇指＋食指捏住，系統才會進入投擲狀態。","ready")}
+  if(pinch<.9&&now>cooldownUntil){
+   armed=true;armedAt=now;throwStarted=false;maxThrowSpeed=0;status("🤏 READY","已鎖定！直接做自然投擲動作。","armed");
+  }else status("✋ 手已鎖定","捏住拇指＋食指即可準備投擲。","ready");
   return;
  }
  if(armed){
   maxThrowSpeed=Math.max(maxThrowSpeed,speed);
-  if(pinch<.95){
-   if(speed>.38&&now-armedAt>180)throwStarted=true;
+  if(pinch<1.12){
+   if(speed>.22&&now-armedAt>60)throwStarted=true;
    status(throwStarted?"💨 投擲中":"🎯 AIM",throwStarted?"保持動作，鬆開手指才會 Release。":"先做出明確前送動作，再鬆開手指。","armed");return
   }
-  if(throwStarted&&maxThrowSpeed>.38&&now-armedAt>220){
-   armed=false;pinchSince=0;throwStarted=false;cooldownUntil=now+1200;status("💨 THROW！","已確認持鏢 → 投擲 → Release。","ready");
+  if(throwStarted&&maxThrowSpeed>.22&&now-armedAt>80){
+   armed=false;pinchSince=0;throwStarted=false;cooldownUntil=now+850;status("💨 THROW！","已確認持鏢 → 投擲 → Release。","ready");
    virtualThrow(index,{x:vx,y:vy});if(navigator.vibrate)navigator.vibrate(45);return
   }
   armed=false;pinchSince=0;throwStarted=false;status("↩️ 沒有投出","只有張開手不算投擲，重新捏住再來。","ready");
@@ -91,7 +90,13 @@ function loop(){
   try{
    const result=landmarker.detectForVideo(video,performance.now());
    if(result.landmarks?.length)processHand(result.landmarks[0],performance.now());
-   else{armed=false;pinchSince=0;throwStarted=false;history.length=0;clearHand();status("🖐️ 找手中","把手放在鏡頭前，手腕與手指盡量完整入鏡。")}
+   else{
+    const now=performance.now();
+    if(armed&&throwStarted&&lastTip&&now-lastSeenAt<260){
+     armed=false;throwStarted=false;cooldownUntil=now+850;status("💨 THROW！","快速動作造成短暫失去手部，也視為有效 Release。","ready");
+     virtualThrow(lastTip,{x:0,y:0});if(navigator.vibrate)navigator.vibrate(45);
+    }else if(now-lastSeenAt>320){armed=false;pinchSince=0;throwStarted=false;history.length=0;clearHand();status("🖐️ 找手中","把投鏢手放進畫面。")}
+   }
   }catch{}
  }
  requestAnimationFrame(loop);
