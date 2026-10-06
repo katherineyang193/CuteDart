@@ -77,7 +77,7 @@ const cameraHint=document.getElementById("cameraHint");
 const cameraScore=document.getElementById("cameraScore");
 const cameraDarts=document.getElementById("cameraDarts");
 const cameraBadge=document.getElementById("cameraHitBadge");
-let cameraStream=null,cameraThrowing=false,cameraBoardSize=260,cameraDrag=null;
+let cameraStream=null,cameraThrowing=false,cameraBoardSize=260,cameraDrag=null,cameraFacing="user";
 const cameraState={score:0,darts:0,marks:[]};
 
 function drawCameraBoard(minimal=cameraThrowing&&!cameraScreen.classList.contains("hit-reveal")){
@@ -117,8 +117,8 @@ async function requestCamera(){
   if(!window.isSecureContext)throw Object.assign(new Error("insecure"),{name:"SecurityError"});
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw Object.assign(new Error("unsupported"),{name:"NotSupportedError"});
   stopCamera();
-  cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});
-  cameraVideo.srcObject=cameraStream;await cameraVideo.play();cameraStage.classList.add("ready");
+  cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:cameraFacing}},audio:false});
+  cameraVideo.srcObject=cameraStream;await cameraVideo.play();cameraStage.classList.add("ready");cameraStage.classList.toggle("selfie",cameraFacing==="user");
   cameraHint.textContent="✅ 相機已開啟！拖曳飛鏢靶調整位置，再開始投鏢。";
   btn.style.display="none";
  }catch(err){
@@ -151,8 +151,9 @@ document.getElementById("cameraHomeBtn").addEventListener("click",()=>{stopCamer
 document.getElementById("smallerBoard").addEventListener("click",()=>resizeCameraBoard(-25));
 document.getElementById("biggerBoard").addEventListener("click",()=>resizeCameraBoard(25));
 document.getElementById("resetBoard").addEventListener("click",resetCameraBoard);
+document.getElementById("flipCamera").addEventListener("click",async()=>{cameraFacing=cameraFacing==="user"?"environment":"user";await requestCamera()});
 document.getElementById("cameraThrowMode").addEventListener("click",()=>{
- cameraThrowing=!cameraThrowing;cameraScreen.classList.toggle("throwing",cameraThrowing);cameraScreen.classList.remove("hit-reveal");drawCameraBoard();
+ cameraThrowing=!cameraThrowing;cameraScreen.classList.toggle("throwing",cameraThrowing);cameraScreen.classList.remove("hit-reveal");drawCameraBoard();if(cameraThrowing){document.documentElement.requestFullscreen?.().catch(()=>{})}else if(document.fullscreenElement){document.exitFullscreen?.().catch(()=>{})}
  document.getElementById("cameraThrowMode").textContent=cameraThrowing?"結束體感投鏢 ✋":"開始體感投鏢 🎯";
  cameraHint.textContent=cameraThrowing?"🖐️ 不用碰螢幕：捏住準備、向前投擲並鬆開。":"拖曳飛鏢靶到想放的位置。";
 });
