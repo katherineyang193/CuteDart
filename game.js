@@ -136,13 +136,16 @@ function stopCamera(){if(cameraStream){cameraStream.getTracks().forEach(t=>t.sto
 function resetCameraBoard(){cameraBoardSize=Math.min(280,Math.max(210,cameraStage.clientWidth*.58));arBoard.style.width=cameraBoardSize+"px";arBoard.style.height=cameraBoardSize+"px";arBoard.style.left="50%";arBoard.style.top="50%";arBoard.style.transform="translate(-50%,-50%)"}
 function resizeCameraBoard(delta){cameraBoardSize=Math.max(170,Math.min(Math.min(360,cameraStage.clientWidth*.82),cameraBoardSize+delta));arBoard.style.width=cameraBoardSize+"px";arBoard.style.height=cameraBoardSize+"px"}
 function cameraPoint(e){const r=cameraBoard.getBoundingClientRect();return{x:(e.clientX-r.left)*420/r.width,y:(e.clientY-r.top)*420/r.height}}
+let cameraEpoch=0;
+window.cuteDartResetCameraTimers=()=>{cameraEpoch++};
 function cameraThrow(p){
+ const epoch=cameraEpoch;
  const h=hitScore(p.x,p.y);cameraState.score+=h.score;cameraState.darts++;cameraState.marks.push({x:p.x,y:p.y,label:h.label});cameraScreen.classList.add("hit-reveal");drawCameraBoard(false);updateCameraHud();
  cameraBadge.textContent=h.score?h.label+"!":"MISS";cameraBadge.classList.remove("show");void cameraBadge.offsetWidth;cameraBadge.classList.add("show");
  cameraHint.textContent=h.score?"🎯 "+h.label+" +"+h.score:"💨 MISS！";
- setTimeout(()=>{cameraScreen.classList.remove("hit-reveal");if(cameraThrowing)drawCameraBoard(true)},2050);
+ setTimeout(()=>{if(epoch!==cameraEpoch)return;cameraScreen.classList.remove("hit-reveal");if(cameraThrowing)drawCameraBoard(true)},2050);
  if(h.kind==="bull")beep(920,.11);else if(h.kind==="triple"||h.kind==="double")beep(760,.09);else if(h.kind==="miss")beep(180,.12);else beep(620,.07);
- if(cameraState.darts>=3)setTimeout(()=>{cameraState.darts=0;cameraState.marks=[];drawCameraBoard();updateCameraHud();cameraHint.textContent="✨ 新回合！繼續投鏢吧！"},2100);
+ if(cameraState.darts>=3)setTimeout(()=>{if(epoch!==cameraEpoch)return;cameraState.darts=0;cameraState.marks=[];drawCameraBoard();updateCameraHud();cameraHint.textContent="✨ 新回合！繼續投鏢吧！"},2100);
 }
 document.getElementById("classicEntry").addEventListener("click",()=>document.getElementById("classicModes").classList.toggle("open"));
 document.getElementById("cameraEntry").addEventListener("click",startCameraMode);
