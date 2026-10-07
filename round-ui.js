@@ -31,6 +31,14 @@
       el.classList.toggle("filled",!!r);
     });
   }
+  function resetRoundUI(){
+    roundResults=[];
+    roundComplete=false;
+    renderResults();
+    const badge=document.getElementById("cameraHitBadge");
+    if(badge){badge.textContent="";badge.classList.remove("show")}
+  }
+  window.cuteDartResetRoundUI=resetRoundUI;
   renderResults();
 
   if (typeof drawCameraDart === "function") {
