@@ -9,7 +9,7 @@
  function overlap(a,b){return a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top}
  function placeMascot(c,dance=false){
   const el=c.mascot.el;el.hidden=false;el.style.left='';el.style.right='12px';
-  if(c===contexts.classic){if(dance){el.style.right='';el.style.left='calc(50% - '+cfg.mascotSize/2+'px)'}return}
+  if(c===contexts.classic){if(dance){el.style.right='';el.style.left='calc(50% - '+(el.getBoundingClientRect().width||cfg.mascotSize)/2+'px)'}return}
   // Test actual movable target and UI bounds, including fullscreen exit button.
   const hr=c.host.getBoundingClientRect();if(!hr.width)return;
   const size=el.getBoundingClientRect().width||cfg.mascotSize,bottom=hr.bottom-78;

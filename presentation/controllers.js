@@ -34,7 +34,7 @@
   reset(){this.clear();this.paused.forEach(a=>a.play?.());this.paused=[];this.layer.replaceChildren();this.board.classList.remove('v11-freeze')}
  }
  class MascotController extends TimedController {
-  constructor(host,sound){super();this.host=host;this.sound=sound;this.el=document.createElement('div');this.el.className='v11-mascot idle';this.el.style.setProperty('--mascot-size',cfg.mascotSize+'px');this.el.innerHTML='<span class="v11-bubble"></span><div class="v11-capy-art"></div>';host.appendChild(this.el);this.art=this.el.querySelector('.v11-capy-art');this.bubble=this.el.querySelector('span');
+  constructor(host,sound){super();this.host=host;this.sound=sound;this.el=document.createElement('div');this.el.className='v11-mascot idle';this.el.style.setProperty('--mascot-size',cfg.mascotSize+'px');this.el.style.setProperty('--mascot-mobile-size',cfg.mascotMobileSize+'px');this.el.innerHTML='<span class="v11-bubble"></span><div class="v11-capy-art"></div>';host.appendChild(this.el);this.art=this.el.querySelector('.v11-capy-art');this.bubble=this.el.querySelector('span');
    fetch('assets/capybara.svg').then(r=>{if(!r.ok)throw Error('Capybara asset');return r.text()}).then(svg=>{this.art.innerHTML=svg}).catch(()=>{this.art.textContent='🦫'});
   }
   react(h,tier){this.clear();const reaction=h.label==='BUST'||h.score<=cfg.lowScore?'puzzled':tier==='bull'?'dance':tier==='high'||h.score>=cfg.mediumScore?'wiggle':'clap';this.el.className='v11-mascot '+reaction;this.bubble.textContent=reaction==='puzzled'?(h.score?'咦？':'？'):reaction==='dance'?'卡皮開跳！':reaction==='wiggle'?'扭一下～':'好球！';

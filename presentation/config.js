@@ -4,6 +4,6 @@ window.CuteDartV11Config = Object.freeze({
   normalMs:900, highMs:1300, bullMs:1900, freezeMs:120,
   cameraImpactDelayMs:520, cameraHoldMs:2600, cameraBullHoldMs:3100,
   danceMs:1800, miniDanceMs:1100, reactionMs:800,
-  particles:16, volume:0.10, mascotSize:100,
+  particles:16, volume:0.10, mascotSize:192, mascotMobileSize:140,
   recordKey:'cuteDartV11RoundRecords'
 });

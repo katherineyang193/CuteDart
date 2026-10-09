@@ -39,3 +39,34 @@
 @keyframes v11-puzzled{40%{transform:rotate(-13deg) translateY(8px) scaleY(.8)}100%{transform:rotate(-7deg)}}
 @media(max-width:430px){.v11-classic-play{grid-template-columns:minmax(0,1fr) 93px;gap:5px}.v11-summary{padding:8px}.camera-stage .v11-summary{width:96px}.v11-dart b{font-size:14px}.v11-total b{font-size:24px}.camera-stage .v11-mascot{width:80px;height:80px}.high .v11-pop b{font-size:22px}.high .v11-pop strong{font-size:36px}}
 @media(prefers-reduced-motion:reduce){.v11-mascot *,.v11-impact *,.v11-summary *{animation:none!important;transition:none!important}.v11-pop{opacity:1}.v11-ring,.v11-wave,.v11-rays{display:none}}
+
+/* V1.1 readability update: larger score cards and capybara for distant players. */
+.v11-classic-play{grid-template-columns:minmax(0,1fr) 144px;padding-bottom:204px}
+.v11-summary{padding:14px;border-radius:22px;background:#25374aa8}
+.v11-summary>small{font-size:18px;margin-bottom:10px}
+.v11-dart{padding:10px 0}.v11-dart span,.v11-total span{font-size:16px;letter-spacing:1px}
+.v11-dart b{font-size:26px;line-height:1.2;margin-top:5px}.v11-total b{font-size:46px;line-height:1.1}
+.v11-record{font-size:16px;line-height:1.2}
+.camera-stage .v11-summary{width:200px;top:max(86px,12%);right:max(14px,env(safe-area-inset-right))}
+.camera-stage .v11-dart b{font-size:34px}.camera-stage .v11-total b{font-size:58px}
+.v11-pop b{font-size:28px}.v11-pop strong{font-size:46px}
+.high .v11-pop b{font-size:40px}.high .v11-pop strong{font-size:66px}
+.bull .v11-pop b{font-size:clamp(38px,6vw,86px)}.bull .v11-pop strong{font-size:78px}
+.v11-bubble{font-size:20px;padding:7px 13px;line-height:1.2}
+.camera-screen.throwing .camera-hud span{font-size:clamp(24px,2.2vw,40px);padding:12px 18px}
+.multi-player-board{width:220px!important;padding:14px!important}.multi-player{grid-template-columns:58px 1fr!important;gap:10px!important;padding:10px!important}.multi-player .avatar{width:54px!important;height:54px!important}.multi-player span{font-size:18px!important}.multi-player strong{font-size:36px!important}
+@media(max-width:600px){
+ .v11-classic-play{grid-template-columns:minmax(0,1fr) 126px;padding-bottom:154px}
+ .v11-summary{padding:11px}.v11-summary>small{font-size:16px}.v11-dart span,.v11-total span{font-size:14px}.v11-dart b{font-size:22px}.v11-total b{font-size:40px}.v11-record{font-size:13px}
+ .camera-stage .v11-summary{width:148px;right:8px;top:max(86px,12%)}.camera-stage .v11-dart b{font-size:26px}.camera-stage .v11-total b{font-size:44px}
+ .v11-mascot,.camera-stage .v11-mascot{width:var(--mascot-mobile-size);height:var(--mascot-mobile-size)}
+ .v11-bubble{font-size:17px;padding:5px 10px}
+ .v11-pop b{font-size:24px}.v11-pop strong{font-size:40px}.high .v11-pop b{font-size:32px}.high .v11-pop strong{font-size:54px}.bull .v11-pop strong{font-size:62px}
+ .camera-screen.throwing .camera-hud span{font-size:23px;padding:9px 12px}
+ .multi-player-board{width:154px!important;padding:9px!important}.multi-player{grid-template-columns:40px 1fr!important;gap:6px!important;padding:7px 5px!important}.multi-player .avatar{width:38px!important;height:38px!important}.multi-player span{font-size:14px!important}.multi-player strong{font-size:28px!important}
+}
+@media(max-height:520px) and (min-width:601px){
+ .camera-stage .v11-summary{top:74px;width:168px;padding:10px}.camera-stage .v11-dart{padding:6px 0}.camera-stage .v11-dart b{font-size:26px}.camera-stage .v11-total b{font-size:42px}
+ .camera-stage .v11-mascot{width:var(--mascot-mobile-size);height:var(--mascot-mobile-size)}
+ .camera-screen.throwing .camera-hud span{font-size:24px;padding:8px 12px}
+}
