@@ -50,10 +50,10 @@
   constructor(host,mode,sound){this.mode=mode;this.sound=sound;this.rows=[];this.el=document.createElement('aside');this.el.className='v11-summary';this.el.setAttribute('aria-label','三鏢結果');this.el.setAttribute('aria-live','polite');this.el.innerHTML='<small>本回合</small>'+[1,2,3].map(n=>`<div class="v11-dart"><span>DART ${n}</span><b>—</b></div>`).join('')+'<div class="v11-total"><span>TOTAL</span><b>0</b></div><strong class="v11-record"></strong>';host.appendChild(this.el)}
   add(h){if(this.rows.length>=3)this.reset();this.rows.push({...h});this.render();if(this.rows.length===3)this.finish()}
   render(){this.el.querySelectorAll('.v11-dart').forEach((el,i)=>{const h=this.rows[i];el.querySelector('b').textContent=h?`${h.label} · ${h.score}`:'—';el.classList.toggle('filled',!!h)});this.el.querySelector('.v11-total b').textContent=this.rows.reduce((s,h)=>s+h.score,0)}
-  finish(){const total=this.rows.reduce((s,h)=>s+h.score,0);const busted=this.rows.some(h=>h.label==='BUST');if(busted)this.el.querySelector('.v11-total b').textContent='BUST';this.el.classList.remove('settled');void this.el.offsetWidth;this.el.classList.add('settled');this.sound.play('total');
+  finish(){const total=this.rows.reduce((s,h)=>s+h.score,0);const busted=this.mode==='camera'&&this.rows.some(h=>h.label==='BUST');if(busted)this.el.querySelector('.v11-total b').textContent='BUST';this.el.classList.remove('settled');void this.el.offsetWidth;this.el.classList.add('settled');this.sound.play('total');
    if(busted)return;try{const records=JSON.parse(localStorage.getItem(cfg.recordKey)||'{}');const legacy=this.mode==='classic'?JSON.parse(localStorage.getItem('cuteDartRecords')||'{}').bestRound:0;const best=Number(records[this.mode]??legacy)||0;if(total>best){records[this.mode]=total;localStorage.setItem(cfg.recordKey,JSON.stringify(records));this.el.querySelector('.v11-record').textContent='NEW RECORD!'}}catch{}
   }
-  bust(){this.rows=this.rows.map(h=>({...h,score:0}));this.render();this.el.querySelector('.v11-total b').textContent='BUST';this.el.querySelector('.v11-record').textContent=''}
+  bust(){if(this.mode==='classic'){this.render();return}this.rows=this.rows.map(h=>({...h,score:0}));this.render();this.el.querySelector('.v11-total b').textContent='BUST';this.el.querySelector('.v11-record').textContent=''}
   reset(){this.rows=[];this.el.classList.remove('settled');this.el.querySelector('.v11-record').textContent='';this.render()}
  }
  window.CuteDartV11={EffectController,MascotController,SoundController,ScoreSummaryController,TimedController};

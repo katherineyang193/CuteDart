@@ -17,7 +17,8 @@ commit(triple);assert(d.querySelector('.v11-classic-play .v11-impact.high'));ass
 commit(bull);assert(d.querySelector('.v11-classic-play .v11-impact.bull'));assert.equal(contexts.classic.mascot.el.className,'v11-mascot dance');assert.equal(d.querySelector('.v11-classic-play .v11-total b').textContent,'130');assert.equal(d.querySelector('.v11-classic-play .v11-record').textContent,'NEW RECORD!');assert.equal(w.eval('state.turn'),130);
 tick(2000);assert.equal(contexts.classic.mascot.el.className,'v11-mascot idle');assert.equal(contexts.classic.mascot.el.style.right,'12px');
 commit(dbl);assert.equal(contexts.classic.summary.rows.length,1);assert(d.querySelector('.v11-classic-play .v11-impact.high'));assert.equal(d.querySelector('.v11-classic-play .v11-record').textContent,'');
-w.eval('newGame("301");state.score=10');commit(bull);assert.equal(contexts.classic.summary.rows[0].score,0);assert.equal(d.querySelector('.v11-classic-play .v11-total b').textContent,'BUST');assert.equal(w.eval('state.score'),10);
+w.eval('newGame("301");state.score=10');commit(bull);assert.equal(contexts.classic.summary.rows[0].score,0);assert.equal(d.querySelector('.v11-classic-play .v11-total b').textContent,'0');assert.equal(w.eval('state.score'),10);
+w.eval('newGame("301");state.score=60');commit(normal);commit(bull);assert.equal(contexts.classic.summary.el.querySelector('.v11-total b').textContent,'20');assert.equal(w.eval('state.turn'),20);
 // Camera accepted hits, immediate panel update, delayed effects and cancelled timers.
 w.eval('show("camera")');function cameraHit(p){w.eval(`cameraThrow(${JSON.stringify(p)})`)}
 cameraHit(normal);assert.equal(contexts.camera.summary.rows.length,1);assert.equal(contexts.camera.effect.layer.childElementCount,0);tick(520);assert(contexts.camera.effect.layer.querySelector('.normal'));assert.equal(w.eval('cameraState.score'),20);
