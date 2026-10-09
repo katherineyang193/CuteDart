@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" fill="none">
+ <ellipse cx="91" cy="164" rx="55" ry="8" fill="#30251c" opacity=".12"/>
+ <g stroke="#644a35" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+ <g id="capy-body"><ellipse cx="90" cy="119" rx="49" ry="42" fill="#cba477"/><ellipse cx="90" cy="129" rx="29" ry="27" fill="#ead0a6"/>
+ <path d="M54 142q-16 23 5 22h16v-17M108 148v16h16q20 0 3-22" fill="#b78b60"/></g>
+ <g id="capy-head"><circle cx="51" cy="51" r="14" fill="#cba477"/><circle cx="125" cy="51" r="14" fill="#cba477"/>
+ <path d="M43 77q-3-40 40-39h14q42 0 44 39v14q-1 30-51 30T43 91Z" fill="#d7b487"/>
+ <ellipse cx="91" cy="91" rx="35" ry="20" fill="#efd5ac" stroke="none"/>
+ <g id="capy-eyes" fill="#463426" stroke="none"><ellipse cx="65" cy="76" rx="4" ry="5"/><ellipse cx="116" cy="76" rx="4" ry="5"/></g>
+ <path d="M82 88q9-7 18 0l-9 6Z" fill="#644a35"/><path d="M91 96v6m-10-1q10 8 20 0"/>
+ <ellipse cx="56" cy="89" rx="9" ry="5" fill="#edbb8c" stroke="none"/><ellipse cx="128" cy="89" rx="9" ry="5" fill="#edbb8c" stroke="none"/>
+ <path d="M88 38q-8-10 3-18 12 8 7 18" fill="#ffd877"/></g>
+ <g id="capy-arms" fill="#cba477"><ellipse id="capy-left" cx="46" cy="120" rx="12" ry="23" transform="rotate(24 46 120)"/><ellipse id="capy-right" cx="134" cy="120" rx="12" ry="23" transform="rotate(-24 134 120)"/></g>
+ </g>
+</svg>

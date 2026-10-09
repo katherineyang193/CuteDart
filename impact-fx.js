@@ -42,9 +42,9 @@
   function mapPhase(t){if(t.includes("READY"))return["預備","ready"];if(t==="3")return["⓷","count"];if(t==="2")return["⓶","count"];if(t==="1")return["⓵","count"];if(t.includes("THROW"))return["THROW","throw"];if(t.includes("投擲中"))return["投擲中…","throw"];if(t.includes("判定"))return["命中判定","idle"];return["辨識手勢","idle"]}
   function refreshPhase(){const [txt,mode]=mapPhase(big.textContent.trim());phase.textContent=txt;stage.classList.toggle("fx-ready",mode==="ready"||mode==="count");drawGuide(mode)}new MutationObserver(refreshPhase).observe(big,{childList:true,subtree:true,characterData:true});drawGuide();
 
-  function holdFor(hit,total){if(total===180)return 10000;if(hit.label==="T20"||hit.kind==="bull"||hit.score>=50)return 9000;if(hit.score>=40)return 7000;return 5000}
+  function holdFor(hit,total){return hit.kind==="bull"||total===180?window.CuteDartV11Config.cameraBullHoldMs:window.CuteDartV11Config.cameraHoldMs}
   function celebFor(hit,total){if(total===180)return"180!!";if(hit.label==="T20")return"TRIPLE 20!";if(hit.kind==="bull")return"BULL!";if(hit.score>=50)return"AMAZING!";return""}
-  window.cuteDartResultHoldMs=5000;
+  window.cuteDartResultHoldMs=window.CuteDartV11Config.cameraHoldMs;
 
   function animateFlight(p){const sr=stage.getBoundingClientRect(),br=arBoard.getBoundingClientRect(),tx=br.left-sr.left+(p.x/420)*br.width,ty=br.top-sr.top+(p.y/420)*br.height,sx=sr.width*.13,sy=sr.height*.78,dx=tx-sx,dy=ty-sy,angle=Math.atan2(dy,dx)*180/Math.PI;flight.style.left=sx+"px";flight.style.top=sy+"px";flight.classList.add("show");flight.getAnimations().forEach(a=>a.cancel());flight.animate([{transform:`translate(0,0) rotate(${angle}deg) scale(.7)`,opacity:.2},{offset:.32,opacity:1},{transform:`translate(${dx}px,${dy}px) rotate(${angle}deg) scale(1.08)`,opacity:1}],{duration:620,easing:"cubic-bezier(.1,.75,.22,1)",fill:"forwards"});later(()=>flight.classList.remove("show"),690)}
   function drawClose(p){const ctx=setupCanvas(closeCanvas,420);ctx.save();ctx.translate(C,C);ctx.scale(2.25,2.25);ctx.translate(-p.x,-p.y);drawBoard(ctx,p);ctx.restore()}
